@@ -33,9 +33,7 @@ public class RSSReaderTest {
 
 	@Test(expected = NullPointerException.class)
 	public void readUnavailableURL() throws Exception {
-
 		new RSSReader().readRSSFeed("abc").toString();
-
 	}
 
 	@Test(expected = NullPointerException.class)
