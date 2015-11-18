@@ -15,7 +15,6 @@ import com.sun.syndication.io.FeedException;
  * @author galaksiya
  *
  */
-
 public class FeedMetaDataMenager {
 	public BufferedReader br;
 

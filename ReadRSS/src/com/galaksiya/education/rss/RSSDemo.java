@@ -1,6 +1,8 @@
 package com.galaksiya.education.rss;
 
 import java.io.IOException;
+import java.util.Iterator;
+
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.jdom.JDOMException;
@@ -22,9 +24,22 @@ public class RSSDemo {
 		UserInteraction interaction = UserInteraction.getInstance();
 		interaction.getUserPreferences();
 
+		RSSReader reader = new RSSReader();
+		FeedWriter writer = new FeedWriter();
+		Iterator<?> itEntries;
+		itEntries = reader.readRSSFeed(interaction.getLink());
 		while (interaction.getAddOrRead() == 2) {
 			// if user choosed to add a news source.
-			new FeedWriter().writeRSSFeed(new RSSReader().readRSSFeed(interaction.getLink()), interaction.getMethod());
+			while (itEntries.hasNext()) {
+				writer.writeRSSFeed(itEntries, interaction.getMethod());
+
+				// char nextFeed = interaction.continueCheck();
+
+				if (!(interaction.continueCheck() == 'y')) {
+
+					break;
+				}
+			}
 
 			char addControl = interaction.addOrNot();
 			// user decided to add soruce in file.
@@ -52,6 +67,16 @@ public class RSSDemo {
 		String method = menageMetaData.getSourceQuery(URL);
 
 		// if user choose to show RSS feed into console run FeedWriter
-		new FeedWriter().writeRSSFeed(new RSSReader().readRSSFeed(URL), method);
+		itEntries = reader.readRSSFeed(URL);
+		while (itEntries.hasNext()) {
+			writer.writeRSSFeed(itEntries, method);
+
+			// char nextFeed = interaction.continueCheck();
+
+			if (!(interaction.continueCheck() == 'y')) {
+
+				break;
+			}
+		}
 	}
 }

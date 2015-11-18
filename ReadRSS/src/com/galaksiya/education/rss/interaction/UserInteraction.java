@@ -75,6 +75,12 @@ public class UserInteraction {
 		return scanner.next().charAt(0);
 	}
 
+	public char continueCheck() {
+		System.out.println("Press y for next feed :\n" + "Press any button for stop  :");
+		char nextFeed = scanner.next().charAt(0);
+		return nextFeed;
+	}
+
 	public String getLink() {
 		return link;
 	}
