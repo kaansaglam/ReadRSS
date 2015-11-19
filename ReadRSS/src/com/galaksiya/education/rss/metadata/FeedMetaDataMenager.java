@@ -30,6 +30,29 @@ public class FeedMetaDataMenager {
 	 * @return
 	 * @throws IOException
 	 */
+	public String readSourceName(int newsNumber) throws IOException {
+
+		String line = "";
+		String cvsSplitBy = ",";
+		String name = null;
+		int counter = 0;
+		BufferedReader br = menageMetaData();
+		try {
+			while ((line = br.readLine()) != null) {
+				// use comma as separator
+				String[] CSVdata = line.split(cvsSplitBy);
+				if (newsNumber - 1 == counter)
+					name = CSVdata[0];
+				counter++;
+			}
+		} catch (ArrayIndexOutOfBoundsException e) {
+		} catch (IOException e) {
+
+		}
+		br.close();
+		return name;
+	}
+
 	public String readSourceURL(int newsNumber) throws IOException {
 
 		String line = "";

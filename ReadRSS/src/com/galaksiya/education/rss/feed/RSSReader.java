@@ -22,14 +22,16 @@ import java.net.HttpURLConnection;
  */
 
 public class RSSReader {
-	private Iterator<?> itEntries;
+	
 
 	public Iterator<?> readRSSFeed(String sourceUrl) throws IllegalArgumentException, FeedException, IOException {
+		Iterator<?> itEntries = null;
 		try {
 			URL url = new URL(sourceUrl);
 			HttpURLConnection httpcon = (HttpURLConnection) url.openConnection();
 			SyndFeedInput input = new SyndFeedInput();
-			SyndFeed feed = input.build(new XmlReader(httpcon));
+			XmlReader reader = new XmlReader(httpcon);
+			SyndFeed feed = input.build(reader);
 			List<?> entries = feed.getEntries();
 			itEntries = entries.iterator();
 

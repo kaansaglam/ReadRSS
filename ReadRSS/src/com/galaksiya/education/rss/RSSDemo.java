@@ -13,6 +13,7 @@ import com.galaksiya.education.rss.feed.RSSReader;
 import com.galaksiya.education.rss.interaction.MenuPrinter;
 import com.galaksiya.education.rss.interaction.UserInteraction;
 import com.galaksiya.education.rss.metadata.FeedMetaDataMenager;
+import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.io.FeedException;
 
 public class RSSDemo {
@@ -31,7 +32,8 @@ public class RSSDemo {
 		while (interaction.getAddOrRead() == 2) {
 			// if user choosed to add a news source.
 			while (itEntries.hasNext()) {
-				writer.writeRSSFeed(itEntries, interaction.getMethod());
+				SyndEntry entry = (SyndEntry) itEntries.next();
+				writer.writeRSSFeed(entry, interaction.getMethod());
 
 				// char nextFeed = interaction.continueCheck();
 
@@ -69,7 +71,8 @@ public class RSSDemo {
 		// if user choose to show RSS feed into console run FeedWriter
 		itEntries = reader.readRSSFeed(URL);
 		while (itEntries.hasNext()) {
-			writer.writeRSSFeed(itEntries, method);
+			SyndEntry entry = (SyndEntry) itEntries.next();
+			writer.writeRSSFeed(entry, method);
 
 			// char nextFeed = interaction.continueCheck();
 
