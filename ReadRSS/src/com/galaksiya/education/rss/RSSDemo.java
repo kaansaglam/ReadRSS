@@ -8,7 +8,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.jdom.JDOMException;
 import org.xml.sax.SAXException;
 
-import com.galaksiya.education.rss.feed.FeedWriter;
+import com.galaksiya.education.rss.feed.EntryWriter;
 import com.galaksiya.education.rss.feed.RSSReader;
 import com.galaksiya.education.rss.interaction.MenuPrinter;
 import com.galaksiya.education.rss.interaction.UserInteraction;
@@ -26,7 +26,7 @@ public class RSSDemo {
 		interaction.getUserPreferences();
 
 		RSSReader reader = new RSSReader();
-		FeedWriter writer = new FeedWriter();
+		EntryWriter writer = new EntryWriter();
 		Iterator<?> itEntries;
 		itEntries = reader.readRSSFeed(interaction.getLink());
 		while (interaction.getAddOrRead() == 2) {

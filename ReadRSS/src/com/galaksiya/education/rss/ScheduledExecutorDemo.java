@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import com.galaksiya.education.rss.feed.Comparator;
-import com.galaksiya.education.rss.feed.FeedWriter;
+import com.galaksiya.education.rss.feed.FreshEntryFinder;
+import com.galaksiya.education.rss.feed.EntryWriter;
 import com.galaksiya.education.rss.feed.RSSReader;
 import com.galaksiya.education.rss.interaction.MenuPrinter;
 import com.galaksiya.education.rss.metadata.FeedMetaDataMenager;
@@ -19,14 +19,15 @@ import com.sun.syndication.io.FeedException;
 
 public class ScheduledExecutorDemo {
 	public static void main(String[] args) throws ParseException, IllegalArgumentException, IOException, FeedException {
+
 		Map<String, Date> feedTimeMap = new HashMap<String, Date>();
-		feedTimeMap.put("start", null);
+		feedTimeMap.put("Reuters", null);
 		int sourceCount = new MenuPrinter().getConsoleText() - 1;
 		// get how many news source record in file
-		FeedWriter writer = new FeedWriter();
+		EntryWriter writer = new EntryWriter();
 		FeedMetaDataMenager menageData = new FeedMetaDataMenager();
 		// maps for keep last publish date for each source.
-		Comparator compareDates = new Comparator();
+		FreshEntryFinder compareDates = new FreshEntryFinder();
 		RSSReader reader = new RSSReader();
 		Runnable runnable = new Runnable() {
 			public void run() {
@@ -42,26 +43,32 @@ public class ScheduledExecutorDemo {
 						// source query method
 						String method = menageData.getSourceQuery(URL);
 						Iterator<?> itEntries = reader.readRSSFeed(menageData.readSourceURL(i));
-
-						while (itEntries.hasNext()) {
-
+						// this block for first time run the code.
+						if (feedTimeMap.get(name) == null) {
 							SyndEntry entry = (SyndEntry) itEntries.next();
-
-							SyndEntry freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
-
-							if (feedTimeMap.get(name) == null) {
-
+							writer.writeRSSFeed(entry, method);
+							feedTimeMap.put(name, writer.getLastPublishDate());
+							while (itEntries.hasNext()) {
+								entry = (SyndEntry) itEntries.next();
 								writer.writeRSSFeed(entry, method);
-								feedTimeMap.put(name, writer.getLastPublishDate());
-								while (itEntries.hasNext()) {
-									writer.writeRSSFeed(entry, method);
-								}
-							} else {
-
+							}
+							// this block for after first run the code.
+						} else {
+							SyndEntry entry = (SyndEntry) itEntries.next();
+							SyndEntry freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
+							if (freshEntry != null) {
 								writer.writeRSSFeed(freshEntry, method);
 								feedTimeMap.put(name, writer.getLastPublishDate());
 							}
+							while (itEntries.hasNext()) {
+								entry = (SyndEntry) itEntries.next();
+								freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
+								if (freshEntry != null) {
+									writer.writeRSSFeed(freshEntry, method);
+								}
+							}
 						}
+						System.out.println(feedTimeMap.get(name));
 					}
 				} catch (ArrayIndexOutOfBoundsException e) {
 				} catch (IOException e) {
@@ -73,6 +80,7 @@ public class ScheduledExecutorDemo {
 				}
 			}
 		};
+
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		service.scheduleAtFixedRate(runnable, 0, 10, TimeUnit.SECONDS);
 	}
