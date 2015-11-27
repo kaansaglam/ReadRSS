@@ -3,32 +3,38 @@ package com.galaksiya.education.rss.feed;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
 
 import org.junit.Test;
 import com.galaksiya.education.rss.metadata.FeedMetaDataMenager;
+import com.sun.syndication.feed.synd.SyndEntry;
+import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.io.FeedException;
+import com.sun.syndication.io.SyndFeedInput;
+import com.sun.syndication.io.XmlReader;
 
 public class RSSReaderTest {
 
 	@Test
 	public void readRSS() throws IllegalArgumentException, FeedException, IOException {
-		String testUrl = new FeedMetaDataMenager().readSourceURL(2);
 
+		Iterator<?> itEntries = null;
+		String testUrl = new FeedMetaDataMenager().readSourceURL(1);
 		URL url = new URL(testUrl);
-		String httpconTest = url.openConnection().toString();
-		String httpcon = new RSSReader().readRSSFeed(testUrl).toString();
+		HttpURLConnection httpcon = (HttpURLConnection) url.openConnection();
+		SyndFeedInput input = new SyndFeedInput();
+		XmlReader reader = new XmlReader(httpcon);
+		SyndFeed feed = input.build(reader);
+		List<?> entries = feed.getEntries();
+		itEntries = entries.iterator();
+		SyndEntry entry = (SyndEntry) itEntries.next();
+		Iterator<?> itEntriesTest = new RSSReader().readRSSFeed(testUrl);
+		SyndEntry entryTest = (SyndEntry) itEntriesTest.next();
 
-		assertEquals(httpconTest, httpcon);
-	}
-
-	@Test
-	public void readEmptyURL() throws IOException, IllegalArgumentException, FeedException {
-		String testUrl = "http://";
-		URL url = new URL("http://");
-		String httpconTest = url.openConnection().toString();
-		String httpcon = new RSSReader().readRSSFeed(testUrl).toString();
-		assertEquals(httpconTest, httpcon);
+		assertEquals(entry, entryTest);
 	}
 
 	@Test(expected = NullPointerException.class)
@@ -40,4 +46,5 @@ public class RSSReaderTest {
 	public void readNullURL() throws Exception {
 		new RSSReader().readRSSFeed("").toString();
 	}
+
 }

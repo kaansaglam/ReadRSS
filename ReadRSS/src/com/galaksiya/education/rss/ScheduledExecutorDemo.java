@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
+
 import com.galaksiya.education.rss.feed.FreshEntryFinder;
 import com.galaksiya.education.rss.feed.EntryWriter;
 import com.galaksiya.education.rss.feed.RSSReader;
@@ -18,8 +21,9 @@ import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.io.FeedException;
 
 public class ScheduledExecutorDemo {
-	public static void main(String[] args) throws ParseException, IllegalArgumentException, IOException, FeedException {
+	static Logger log = Logger.getLogger(ScheduledExecutorDemo.class);
 
+	public static void main(String[] args) throws ParseException, IllegalArgumentException, IOException, FeedException {
 		Map<String, Date> feedTimeMap = new HashMap<String, Date>();
 		feedTimeMap.put("Reuters", null);
 		int sourceCount = new MenuPrinter().getConsoleText() - 1;
@@ -43,40 +47,44 @@ public class ScheduledExecutorDemo {
 						// source query method
 						String method = menageData.getSourceQuery(URL);
 						Iterator<?> itEntries = reader.readRSSFeed(menageData.readSourceURL(i));
-						// this block for first time run the code.
-						if (feedTimeMap.get(name) == null) {
-							SyndEntry entry = (SyndEntry) itEntries.next();
-							writer.writeRSSFeed(entry, method);
-							feedTimeMap.put(name, writer.getLastPublishDate());
-							while (itEntries.hasNext()) {
-								entry = (SyndEntry) itEntries.next();
+						if (itEntries != null) {
+							// this block for first time run the code.
+							if (feedTimeMap.get(name) == null) {
+								SyndEntry entry = (SyndEntry) itEntries.next();
 								writer.writeRSSFeed(entry, method);
-							}
-							// this block for after first run the code.
-						} else {
-							SyndEntry entry = (SyndEntry) itEntries.next();
-							SyndEntry freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
-							if (freshEntry != null) {
-								writer.writeRSSFeed(freshEntry, method);
 								feedTimeMap.put(name, writer.getLastPublishDate());
-							}
-							while (itEntries.hasNext()) {
-								entry = (SyndEntry) itEntries.next();
-								freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
+								while (itEntries.hasNext()) {
+									entry = (SyndEntry) itEntries.next();
+									writer.writeRSSFeed(entry, method);
+								}
+								// this block for after first run the code.
+							} else {
+								SyndEntry entry = (SyndEntry) itEntries.next();
+								SyndEntry freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
 								if (freshEntry != null) {
 									writer.writeRSSFeed(freshEntry, method);
+									feedTimeMap.put(name, writer.getLastPublishDate());
+								}
+								while (itEntries.hasNext()) {
+									entry = (SyndEntry) itEntries.next();
+									freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
+									if (freshEntry != null) {
+										writer.writeRSSFeed(freshEntry, method);
+									}
 								}
 							}
 						}
-						System.out.println(feedTimeMap.get(name));
 					}
 				} catch (ArrayIndexOutOfBoundsException e) {
+					log.error("ArrayIndexOutOfBoundsException");
 				} catch (IOException e) {
-					e.printStackTrace();
+					log.error("IOException");
+				} catch (NullPointerException e) {
+					log.info("null entry");
 				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
+					log.error("IllegalArgumentException");
 				} catch (FeedException e) {
-					e.printStackTrace();
+					log.error("FeedException");
 				}
 			}
 		};

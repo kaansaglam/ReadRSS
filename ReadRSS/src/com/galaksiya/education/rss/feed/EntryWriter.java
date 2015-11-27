@@ -5,6 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Date;
+
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -19,6 +21,7 @@ import com.sun.syndication.io.FeedException;
  *
  */
 public class EntryWriter {
+	
 	private Date lastPublishDate;
 
 	public void writeRSSFeed(SyndEntry entry, String method)
@@ -26,9 +29,9 @@ public class EntryWriter {
 			throws IllegalArgumentException, FeedException, IOException {
 		Writer output;
 		output = new BufferedWriter(new FileWriter("/home/galaksiya/Desktop/RSSfeeds.txt", true));
+		Logger log = Logger.getLogger(EntryWriter.class);
 
 		try {
-
 			// parse xml data.
 			// when parse xml data, use ROME library.
 
@@ -50,13 +53,15 @@ public class EntryWriter {
 			System.out.println("Content      : " + archived.text() + "\n\n\n");
 			output.append("\nContent      : " + archived.text() + "\n\n\n");
 			output.close();
+			
 
 		} catch (NullPointerException e) {
-			System.out.println("warning : can not read any feed !!");
+			log.info("warning : can not read any feed !!");
 		} catch (IllegalArgumentException e) {
-			System.out.println("warning : can not read feed content !!");
+			log.info("warning : can not read feed content !!");
 		} catch (IOException e) {
 		}
+		
 	}
 
 	public Date getLastPublishDate() {

@@ -17,15 +17,9 @@ public class FeedMetaDataMenagerTest {
 
 	@Test
 	public void getURL() throws IOException {
-		String expectedURL = "http://feeds.reuters.com/reuters/businessNews";
-		String returnedURL = menageMetaData.readSourceURL(2);
+		String expectedURL = "http://www.teknolog.com/feed/";
+		String returnedURL = menageMetaData.readSourceURL(1);
 		assertEquals(expectedURL, returnedURL);
-	}
-
-	// for null URL cell
-	@Test
-	public void getURLEmpty() throws IOException {
-		assertEquals("", menageMetaData.readSourceURL(9));
 	}
 
 	// for empty row
