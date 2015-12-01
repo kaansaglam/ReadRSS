@@ -13,7 +13,6 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -29,55 +28,59 @@ import com.sun.syndication.io.XmlReader;
  */
 
 public class RSSReader {
-	private Logger log = Logger.getLogger(RSSReader.class);
+	private static final Logger log = Logger.getLogger(RSSReader.class);
 
 	public Iterator<?> readRSSFeed(String sourceUrl)
 			throws IllegalArgumentException, MalformedURLException, FeedException, IOException {
 
-		BasicConfigurator.configure();
 		Iterator<?> itEntries = null;
 		try {
-			// connect the url adress and read data.
-			String doc = readURI(sourceUrl);
-			itEntries = parseFeed(doc);
+			if (sourceUrl != null) {
+				// connect the url adress and read data.
+				String doc = readURI(sourceUrl);
 
-		} catch (NullPointerException e) {
-			log.error(e);
+				if (doc != null) {
+
+					itEntries = parseFeed(doc);
+
+				}
+			}
 		} catch (MalformedURLException e) {
-			log.error(e);
+			log.error("not URL format :" + sourceUrl, e);
 		}
+
 		return itEntries;
 	}
 
-	public String readURI(String sourceUrl) throws IOException, MalformedURLException {
-		URL url = null;
+	public String readURI(String sourceUrl) throws IOException {
+		Logger log = Logger.getLogger(RSSReader.class);
 		BufferedReader reader = null;
 		StringBuilder stringBuilder = null;
 		String doc = null;
-
 		try {
-			// create the HttpURLConnection
-			url = new URL(sourceUrl);
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			// want to do an HTTP GET here
-			connection.setRequestMethod("GET");
 
-			// give it 15 seconds to respond
-			connection.setReadTimeout(15 * 1000);
-			connection.connect();
+			if (sourceUrl != null) {
+				// create the HttpURLConnection
+				URL url = new URL(sourceUrl);
 
-			// read the output from the server
-			reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			stringBuilder = new StringBuilder();
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				// want to do an HTTP GET here
+				connection.setRequestMethod("GET");
 
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				stringBuilder.append(line + "\n");
+				// give it 15 seconds to respond
+				connection.setReadTimeout(15 * 1000);
+				connection.connect();
+
+				// read the output from the server
+				reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+				stringBuilder = new StringBuilder();
+
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					stringBuilder.append(line + "\n");
+				}
+				doc = stringBuilder.toString();
 			}
-			doc = stringBuilder.toString();
-
-		} catch (NullPointerException e) {
-			log.error("could not read " + sourceUrl, e);
 		} catch (MalformedURLException e) {
 			log.error("could not read " + sourceUrl, e);
 		}
@@ -85,11 +88,19 @@ public class RSSReader {
 	}
 
 	public Iterator<?> parseFeed(String doc) throws FeedException, IOException, UnsupportedEncodingException {
-
-		InputStream inputStream = new ByteArrayInputStream(doc.getBytes("UTF-8"));
-		XmlReader reader = new XmlReader(inputStream);
-		SyndFeed feed = new SyndFeedInput().build(reader);
-		List<?> entries = feed.getEntries();
-		return entries.iterator();
+		List<?> entries = null;
+		try {
+			InputStream inputStream = new ByteArrayInputStream(doc.getBytes("UTF-8"));
+			XmlReader reader = new XmlReader(inputStream);
+			SyndFeed feed = new SyndFeedInput().build(reader);
+			entries = feed.getEntries();
+		} catch (FeedException e) {
+			log.error("feed is not valid ", e);
+		}
+		Iterator<?> iterator = null;
+		if (entries != null) {
+			iterator = entries.iterator();
+		}
+		return iterator;
 	}
 }

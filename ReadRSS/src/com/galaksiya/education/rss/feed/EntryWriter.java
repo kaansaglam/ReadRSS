@@ -21,17 +21,14 @@ import com.sun.syndication.io.FeedException;
  *
  */
 public class EntryWriter {
-	
+
 	private Date lastPublishDate;
+	private static final Logger log = Logger.getLogger(RSSReader.class);
 
-	public void writeRSSFeed(SyndEntry entry, String method)
-
+	public void writeFeedEntry(SyndEntry entry, String method)
 			throws IllegalArgumentException, FeedException, IOException {
-		Writer output;
-		output = new BufferedWriter(new FileWriter("/home/galaksiya/Desktop/RSSfeeds.txt", true));
-		Logger log = Logger.getLogger(EntryWriter.class);
 
-		try {
+		try (Writer output = new BufferedWriter(new FileWriter("/home/galaksiya/Desktop/RSSfeeds.txt", true));) {
 			// parse xml data.
 			// when parse xml data, use ROME library.
 
@@ -52,16 +49,12 @@ public class EntryWriter {
 			archived = doc.select(method);
 			System.out.println("Content      : " + archived.text() + "\n\n\n");
 			output.append("\nContent      : " + archived.text() + "\n\n\n");
-			output.close();
-			
-
-		} catch (NullPointerException e) {
-			log.info("warning : can not read any feed !!");
 		} catch (IllegalArgumentException e) {
 			log.info("warning : can not read feed content !!");
 		} catch (IOException e) {
+			log.error("General I/O exception: ", e);
 		}
-		
+
 	}
 
 	public Date getLastPublishDate() {

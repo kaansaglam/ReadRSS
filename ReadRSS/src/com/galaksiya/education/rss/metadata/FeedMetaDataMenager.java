@@ -6,6 +6,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
+import com.galaksiya.education.rss.feed.RSSReader;
 import com.sun.syndication.io.FeedException;
 
 /**
@@ -15,7 +18,9 @@ import com.sun.syndication.io.FeedException;
  * @author galaksiya
  *
  */
+
 public class FeedMetaDataMenager {
+	private static final Logger log = Logger.getLogger(FeedMetaDataMenager.class);
 	public BufferedReader br;
 
 	public BufferedReader menageMetaData() throws IOException {
@@ -36,8 +41,7 @@ public class FeedMetaDataMenager {
 		String cvsSplitBy = ",";
 		String name = null;
 		int counter = 0;
-		BufferedReader br = menageMetaData();
-		try {
+		try (BufferedReader br = menageMetaData();){
 			while ((line = br.readLine()) != null) {
 				// use comma as separator
 				String[] CSVdata = line.split(cvsSplitBy);
@@ -46,10 +50,10 @@ public class FeedMetaDataMenager {
 				counter++;
 			}
 		} catch (ArrayIndexOutOfBoundsException e) {
+			log.error(" array index out of bound  ", e);
 		} catch (IOException e) {
-
+			log.error("General I/O exception: ", e);
 		}
-		br.close();
 		return name;
 	}
 
@@ -59,8 +63,8 @@ public class FeedMetaDataMenager {
 		String cvsSplitBy = ",";
 		String sourceUrl = null;
 		int counter = 0;
-		BufferedReader br = menageMetaData();
-		try {
+		
+		try (BufferedReader br = menageMetaData();){
 			while ((line = br.readLine()) != null) {
 				// use comma as separator
 				String[] CSVdata = line.split(cvsSplitBy);
@@ -69,10 +73,10 @@ public class FeedMetaDataMenager {
 				counter++;
 			}
 		} catch (ArrayIndexOutOfBoundsException e) {
+			log.error(" array index out of bound  ", e);
 		} catch (IOException e) {
-
+			log.error("General I/O exception: ", e);
 		}
-		br.close();
 		return sourceUrl;
 	}
 
@@ -87,9 +91,9 @@ public class FeedMetaDataMenager {
 
 		String line = "";
 		String cvsSplitBy = ",";
-		BufferedReader br = menageMetaData();
+
 		String method = null;
-		try {
+		try (BufferedReader br = menageMetaData();) {
 			while ((line = br.readLine()) != null) {
 				String[] CSVdata = line.split(cvsSplitBy);
 				if (sourceUrl.equals(CSVdata[1])) {
@@ -97,12 +101,14 @@ public class FeedMetaDataMenager {
 				}
 			}
 		} catch (ArrayIndexOutOfBoundsException e) {
+			log.error(" array index out of bound  ", e);
 			System.out.println("");
 		} catch (NullPointerException e) {
 			System.out.println("");
 		} catch (IOException e) {
+			log.error("General I/O exception: ", e);
 		}
-		br.close();
+
 		return method;
 	}
 

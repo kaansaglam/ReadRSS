@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,75 +22,92 @@ import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.io.FeedException;
 
 public class ScheduledExecutorDemo {
-	static Logger log = Logger.getLogger(ScheduledExecutorDemo.class);
+	private static final Logger log = Logger.getLogger(ScheduledExecutorDemo.class);
 
 	public static void main(String[] args) throws ParseException, IllegalArgumentException, IOException, FeedException {
+
 		Map<String, Date> feedTimeMap = new HashMap<String, Date>();
 		feedTimeMap.put("Reuters", null);
 		int sourceCount = new MenuPrinter().getConsoleText() - 1;
-		// get how many news source record in file
-		EntryWriter writer = new EntryWriter();
-		FeedMetaDataMenager menageData = new FeedMetaDataMenager();
-		// maps for keep last publish date for each source.
-		FreshEntryFinder compareDates = new FreshEntryFinder();
-		RSSReader reader = new RSSReader();
+
+		ExecutorService executorService = Executors.newFixedThreadPool(sourceCount);
 		Runnable runnable = new Runnable() {
 			public void run() {
-				try {
-					int i = 1;
-					// loop source number times.
-					for (i = 1; i <= sourceCount; i++) {
-
-						// source name
-						String name = menageData.readSourceName(i);
-						// source URL
-						String URL = menageData.readSourceURL(i);
-						// source query method
-						String method = menageData.getSourceQuery(URL);
-						Iterator<?> itEntries = reader.readRSSFeed(menageData.readSourceURL(i));
-						if (itEntries != null) {
-							// this block for first time run the code.
-							if (feedTimeMap.get(name) == null) {
-								SyndEntry entry = (SyndEntry) itEntries.next();
-								writer.writeRSSFeed(entry, method);
-								feedTimeMap.put(name, writer.getLastPublishDate());
-								while (itEntries.hasNext()) {
-									entry = (SyndEntry) itEntries.next();
-									writer.writeRSSFeed(entry, method);
-								}
-								// this block for after first run the code.
-							} else {
-								SyndEntry entry = (SyndEntry) itEntries.next();
-								SyndEntry freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
-								if (freshEntry != null) {
-									writer.writeRSSFeed(freshEntry, method);
-									feedTimeMap.put(name, writer.getLastPublishDate());
-								}
-								while (itEntries.hasNext()) {
-									entry = (SyndEntry) itEntries.next();
-									freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
-									if (freshEntry != null) {
-										writer.writeRSSFeed(freshEntry, method);
-									}
-								}
-							}
+				for (int i = 1; i <= sourceCount; i++) {
+					final int count = i;
+					executorService.submit(new Runnable() {
+						@Override
+						public void run() {
+							runEntry(sourceCount, feedTimeMap, count);
 						}
-					}
-				} catch (ArrayIndexOutOfBoundsException e) {
-					log.error("ArrayIndexOutOfBoundsException");
-				} catch (IOException e) {
-					log.error("IOException");
-				} catch (NullPointerException e) {
-					log.info("null entry");
-				} catch (IllegalArgumentException e) {
-					log.error("IllegalArgumentException");
-				} catch (FeedException e) {
-					log.error("FeedException");
+					});
 				}
 			}
 		};
 
+		// run read cycle every 10 second.
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		service.scheduleAtFixedRate(runnable, 0, 10, TimeUnit.SECONDS);
+
+	}
+
+	// show all entries into console. after first run show only fresh entry.
+	public static void runEntry(int sourceCount, Map<String, Date> feedTimeMap, int i) {
+		RSSReader reader = new RSSReader();
+		EntryWriter writer = new EntryWriter();
+		FeedMetaDataMenager menageData = new FeedMetaDataMenager();
+		FreshEntryFinder compareDates = new FreshEntryFinder();
+		try {
+			Iterator<?> itEntries;
+			// source name
+			String name = menageData.readSourceName(i);
+			// source URL
+			String URL = menageData.readSourceURL(i);
+			// source query method
+			String method = menageData.getSourceQuery(URL);
+			System.out.println(URL);
+			itEntries = reader.readRSSFeed(menageData.readSourceURL(i));
+			if (itEntries != null) {
+				// this block for first time run the code.
+				if (feedTimeMap.get(name) == null) {
+					SyndEntry entry = (SyndEntry) itEntries.next();
+					writer.writeFeedEntry(entry, method);
+					feedTimeMap.put(name, writer.getLastPublishDate());
+					while (itEntries.hasNext()) {
+
+						entry = (SyndEntry) itEntries.next();
+						writer.writeFeedEntry(entry, method);
+					}
+					// this block for after first run the code.
+				} else {
+					SyndEntry entry = (SyndEntry) itEntries.next();
+					SyndEntry freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
+					if (freshEntry != null) {
+
+						writer.writeFeedEntry(freshEntry, method);
+						feedTimeMap.put(name, writer.getLastPublishDate());
+					}
+					while (itEntries.hasNext()) {
+						entry = (SyndEntry) itEntries.next();
+						freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
+						if (freshEntry != null) {
+							writer.writeFeedEntry(freshEntry, method);
+						}
+					}
+				}
+			}
+
+		} catch (ArrayIndexOutOfBoundsException e) {
+			log.error(" array index out of bound  ", e);
+		} catch (IOException e) {
+			log.error("General I/O exception: ", e);
+		} catch (IllegalArgumentException e) {
+			log.error("illegal argument ", e);
+		} catch (FeedException e) {
+			log.error("feed is not valid", e);
+		} catch (Exception e) {
+			log.error("unexpected exception", e);
+		}
+
 	}
 }

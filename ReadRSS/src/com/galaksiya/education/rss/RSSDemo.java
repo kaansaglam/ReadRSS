@@ -38,9 +38,8 @@ public class RSSDemo {
 			// the method is for show a source's feed
 			writeFeed(interaction, writer, menageMetaData, reader);
 
-		} catch (NullPointerException e) {
-
 		} catch (MalformedURLException e) {
+			log.error("invalid URL type", e);
 		}
 	}
 
@@ -55,17 +54,18 @@ public class RSSDemo {
 		try {
 			// if user choose to show RSS feed into console run FeedWriter
 			Iterator<?> itEntries = reader.readRSSFeed(URL);
-			while (itEntries.hasNext()) {
-				SyndEntry entry = (SyndEntry) itEntries.next();
-				writer.writeRSSFeed(entry, method);
-				// char nextFeed = interaction.continueCheck();
-				if (!(interaction.continueCheck() == 'y')) {
-					break;
+			if (itEntries != null) {
+				while (itEntries.hasNext()) {
+					SyndEntry entry = (SyndEntry) itEntries.next();
+					writer.writeFeedEntry(entry, method);
+					// char nextFeed = interaction.continueCheck();
+					if (!(interaction.continueCheck() == 'y')) {
+						break;
+					}
 				}
 			}
-		} catch (NullPointerException e) {
-			
 		} catch (MalformedURLException e) {
+			log.error("invalid URL type", e);
 		}
 	}
 
@@ -73,19 +73,21 @@ public class RSSDemo {
 			EntryWriter writer) throws IllegalArgumentException, FeedException, IOException {
 		Iterator<?> itEntries = reader.readRSSFeed(interaction.getLink());
 		try {
-			// if user choosed to add a news source.
-			while (itEntries.hasNext()) {
-				SyndEntry entry = (SyndEntry) itEntries.next();
-				writer.writeRSSFeed(entry, interaction.getMethod());
-				// char nextFeed = interaction.continueCheck();
-				if (!(interaction.continueCheck() == 'y')) {
-					break;
+			if (itEntries != null) {
+				// if user choosed to add a news source.
+				while (itEntries.hasNext()) {
+					SyndEntry entry = (SyndEntry) itEntries.next();
+					if (entry != null) {
+						writer.writeFeedEntry(entry, interaction.getMethod());
+						// char nextFeed = interaction.continueCheck();
+						if (!(interaction.continueCheck() == 'y')) {
+							break;
+						}
+					}
 				}
 			}
 		} catch (MalformedURLException e) {
-			log.error("can not add soruce", e);
-		} catch (NullPointerException e) {
-			log.error("can not add source ", e);
+			log.error("invalid URL type", e);
 		}
 
 		char addControl = interaction.addOrNot();
