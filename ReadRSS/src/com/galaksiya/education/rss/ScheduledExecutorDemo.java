@@ -21,13 +21,14 @@ import com.galaksiya.education.rss.metadata.FeedMetaDataMenager;
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.io.FeedException;
 
+import connection.ServletConnection;
+
 public class ScheduledExecutorDemo {
 	private static final Logger log = Logger.getLogger(ScheduledExecutorDemo.class);
 
 	public static void main(String[] args) throws ParseException, IllegalArgumentException, IOException, FeedException {
 
 		Map<String, Date> feedTimeMap = new HashMap<String, Date>();
-		feedTimeMap.put("Reuters", null);
 		int sourceCount = new MenuPrinter().getConsoleText() - 1;
 
 		ExecutorService executorService = Executors.newFixedThreadPool(sourceCount);
@@ -55,6 +56,8 @@ public class ScheduledExecutorDemo {
 	public static void runEntry(int sourceCount, Map<String, Date> feedTimeMap, int i) {
 		RSSReader reader = new RSSReader();
 		EntryWriter writer = new EntryWriter();
+		ServletConnection connect = new ServletConnection();
+
 		FeedMetaDataMenager menageData = new FeedMetaDataMenager();
 		FreshEntryFinder compareDates = new FreshEntryFinder();
 		try {
@@ -71,12 +74,15 @@ public class ScheduledExecutorDemo {
 				// this block for first time run the code.
 				if (feedTimeMap.get(name) == null) {
 					SyndEntry entry = (SyndEntry) itEntries.next();
-					writer.writeFeedEntry(entry, method);
+
+					writer.writeFeedEntry(entry.getTitle(), entry.getLink(), entry.getPublishedDate(), method);
+					connect.postRequest(entry.getTitle(), entry.getLink(), entry.getPublishedDate(), method);
 					feedTimeMap.put(name, writer.getLastPublishDate());
 					while (itEntries.hasNext()) {
 
 						entry = (SyndEntry) itEntries.next();
-						writer.writeFeedEntry(entry, method);
+						writer.writeFeedEntry(entry.getTitle(), entry.getLink(), entry.getPublishedDate(), method);
+						connect.postRequest(entry.getTitle(), entry.getLink(), entry.getPublishedDate(), method);
 					}
 					// this block for after first run the code.
 				} else {
@@ -84,14 +90,20 @@ public class ScheduledExecutorDemo {
 					SyndEntry freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
 					if (freshEntry != null) {
 
-						writer.writeFeedEntry(freshEntry, method);
+						writer.writeFeedEntry(freshEntry.getTitle(), freshEntry.getLink(),
+								freshEntry.getPublishedDate(), method);
+						connect.postRequest(freshEntry.getTitle(), freshEntry.getLink(), freshEntry.getPublishedDate(),
+								method);
 						feedTimeMap.put(name, writer.getLastPublishDate());
 					}
 					while (itEntries.hasNext()) {
 						entry = (SyndEntry) itEntries.next();
 						freshEntry = compareDates.compareDates(entry, feedTimeMap, name);
 						if (freshEntry != null) {
-							writer.writeFeedEntry(freshEntry, method);
+							writer.writeFeedEntry(freshEntry.getTitle(), freshEntry.getLink(),
+									freshEntry.getPublishedDate(), method);
+							connect.postRequest(freshEntry.getTitle(), freshEntry.getLink(),
+									freshEntry.getPublishedDate(), method);
 						}
 					}
 				}

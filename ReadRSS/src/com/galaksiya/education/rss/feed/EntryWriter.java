@@ -11,11 +11,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.io.FeedException;
 
 /**
- * parse the feed data and show it into console. ask continue or finish.
+ * show feed data into console and write in a file
  * 
  * @author galaksiya
  *
@@ -25,21 +24,18 @@ public class EntryWriter {
 	private Date lastPublishDate;
 	private static final Logger log = Logger.getLogger(RSSReader.class);
 
-	public void writeFeedEntry(SyndEntry entry, String method)
+	public void writeFeedEntry(String title, String link, Date date, String method)
 			throws IllegalArgumentException, FeedException, IOException {
 
 		try (Writer output = new BufferedWriter(new FileWriter("/home/galaksiya/Desktop/RSSfeeds.txt", true));) {
-			// parse xml data.
-			// when parse xml data, use ROME library.
 
-			System.out.println("Title        : " + entry.getTitle());
-			output.append("\nTitle        : " + entry.getTitle());
+			System.out.println("Title        : " + title);
+			output.append("\nTitle        : " + title);
 
-			String link = entry.getLink();
 			System.out.println("Link         : " + link);
 			output.append("\nLink         : " + link);
 
-			setLastPublishDate(entry.getPublishedDate());
+			setLastPublishDate(date);
 			System.out.println("Publish Date : " + getLastPublishDate());
 			output.append("\nPublish Date : " + getLastPublishDate());
 			// get news page source

@@ -57,7 +57,7 @@ public class RSSDemo {
 			if (itEntries != null) {
 				while (itEntries.hasNext()) {
 					SyndEntry entry = (SyndEntry) itEntries.next();
-					writer.writeFeedEntry(entry, method);
+					writer.writeFeedEntry(entry.getTitle(), entry.getLink(), entry.getPublishedDate(), method);
 					// char nextFeed = interaction.continueCheck();
 					if (!(interaction.continueCheck() == 'y')) {
 						break;
@@ -78,7 +78,9 @@ public class RSSDemo {
 				while (itEntries.hasNext()) {
 					SyndEntry entry = (SyndEntry) itEntries.next();
 					if (entry != null) {
-						writer.writeFeedEntry(entry, interaction.getMethod());
+						writer.writeFeedEntry(entry.getTitle(), entry.getLink(), entry.getPublishedDate(),
+								interaction.getMethod());
+
 						// char nextFeed = interaction.continueCheck();
 						if (!(interaction.continueCheck() == 'y')) {
 							break;
